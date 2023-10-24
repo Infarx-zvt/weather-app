@@ -14,9 +14,49 @@ const header = document.querySelector('.header')
 const form = document.querySelector('.form')
 const input = document.querySelector('.input');
 
+function removeCard() {
+  //Удвляем предыдущую карточку
+  const prefCard = document.querySelector('.card');
+  if (prefCard) prefCard.remove();
+}
+
+function showError(errorMessage) {
+  //Отображаем карточку с ошибкой
+  const html = `<div class="card">${errorMessage}</div>`
+
+  //Отображаем карточку на странице
+  header.insertAdjacentHTML('beforeend', html)
+}
+
+function showCard({name,country,temp_c,condition}) {
+  //Разметка для карточки
+  const html = `<div class="card">
+<div class="card-siti">
+  <h2 class="card-citi">${name}<span class="span">${country}</span></h2>
+  
+</div>
+
+<div class="card-weather">
+  <div class="cadr-value">${temp_c}<sup>°c</sup></div>
+  <img src="./img/8 1.png" alt="Weather" class="card-img">
+</div>
+<div class="card-deccription">${condition}</div>
+</div>`
+  //Отображаем карточку на странице
+  header.insertAdjacentHTML('beforeend', html)
+}
+
+async function getWeather(citi){
+  //Адрес запроса
+  const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${citi}`;
+  const response = await fetch(url);
+  const data = await response.json();
+   console.log(data);
+   return data;
+  }
 
 //Слушаем отправку формы
-form.onsubmit = function (e) {
+form.onsubmit = async function (e) {
 
   //Отменяем отправку формы
   e.preventDefault();
@@ -25,56 +65,24 @@ form.onsubmit = function (e) {
   let citi = input.value.trim();
 
   //Делаем запрос на сервер
-  //Адрес запроса
-  const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${citi}`;
-
-  //Выполняем запрос
-  fetch(url).then((Response) => {
-    return Response.json()
-  }).then((data) => {
-    
-    // console.log(data.location.name);
-    // console.log(data.location.country)
-    // console.log(data.current.temp_c)
-    // console.log(data.current.condition.text)
-
-    //Проверка на ошибку
-
-    if (data.error) {
-      //Если есть ошибка - выводим ее.
-      //Удвляем предыдущую карточку
-      const prefCard = document.querySelector('.card');
-      if (prefCard) prefCard.remove();
-
-      //Отображаем карточку с ошибкой
-      const html = `<div class="card">${data.error.message}</div>`
-
-         //Отображаем карточку на странице
-         header.insertAdjacentHTML('beforeend', html)
-
-
-    } else {
-      // Если ошибки нет - выводим карточку.
-
-      //Отображаем полученные данные в карточку
-      const prevCard = document.querySelector('.card')
-      if (prevCard) prevCard.remove();
-      //Разметка для карточки
-      const html = `<div class="card">
-                  <div class="card-siti">
-                      <h2 class="card-citi">${data.location.name}<span class="span">${data.location.country}</span></h2>
-                      
-                    </div>
-
-                    <div class="card-weather">
-                      <div class="cadr-value">${data.current.temp_c}<sup>°c</sup></div>
-                      <img src="./img/8 1.png" alt="Weather" class="card-img">
-                    </div>
-                    <div class="card-deccription">${data.current.condition.text}</div>
-                </div>`
-     //Отображаем карточку на странице
-     header.insertAdjacentHTML('beforeend', html)
-    }
- 
-  })
+   const data = await getWeather(citi);
+   if (data.error) {
+    //Если есть ошибка - выводим ее.
+    removeCard();
+    showError(data.error.message);
+  } else {
+    // Если ошибки нет - выводим карточку.
+    //Отображаем полученные данные в карточку
+    removeCard();
+const watherData ={
+  name:data.location.name,
+  country:data.location.country,
+  temp_c:data.current.temp_c,
+  condition:data.current.condition.text
 }
+
+    showCard(watherData);
+  }
+}
+
+
